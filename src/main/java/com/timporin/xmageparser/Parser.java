@@ -1,6 +1,9 @@
 package com.timporin.xmageparser;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -8,31 +11,47 @@ import org.jsoup.nodes.Element;
 
 public class Parser {
     private String infile;
+    private List<Record> records;
+    private MillCounter mc;
 
-    private final String TIME_COLOR = "#CCCC33";
-    private final String PLAYER_COLOR = "#20B2AA";
-    private final String TURN_LIFE_COLOR = "Orange";
-    private final String REGULAR_COLOR = "White";
-
-    private final String BLUE_COLOR = "#87CEFA";
-    private final String WHITE_COLOR = "White";
-    private final String BLACK_COLOR = "White";
-    private final String RED_COLOR = "#FF6347";
-    private final String GREEN_COLOR = "#90EE90";
-    private final String COLORLESS_COLOR = "#B0C4DE";
-    private final String MULTICOLOR_COLOR = "#DAA520";
-
-
-    public static void main(String[] args) {
-        Parser p = new Parser("in.html");
-        p.parseLog();
-    }
+    private List<Element> elems = new ArrayList<>();
 
     public Parser(String infile) {
-       this.infile = infile;
+        this.infile = infile;
+        parseLog();
+        Machine m = new Machine(elems);
+        records = m.getRecords();
+        mc = new MillCounter(records);
     }
 
-    private void parse(Element e, int depth) {
+    public MillCounter getMilled() {
+        return mc;
+    }
+
+    public void print() {
+        StringBuilder sb = new StringBuilder();
+        for (Record r : records) {
+            if (r.time != null) {
+                sb.append(r.time);
+                sb.append("\t");
+            }
+            if (r.turn != null) {
+                sb.append(r.turn);
+                sb.append("\t");
+            }
+            if (r.player != null) {
+                sb.append(r.player);
+                sb.append("\t");
+            }
+            if (r.move != null) {
+                sb.append(r.move);
+            }
+            sb.append("\n");
+        }
+        System.out.println(sb);
+    }
+
+    private void parseEl(Element e) {
         String nodeName = e.nodeName();
         if (nodeName.equals("br")
                 || nodeName.equals("b")
@@ -43,10 +62,6 @@ public class Parser {
         }
 
         StringBuilder nodeText = new StringBuilder();
-        for (int i = 0; i < depth; i++) {
-            nodeText.append("  ");
-        }
-
         nodeText.append(nodeName);
         if (e.hasText()
                 && !nodeName.equals("#document")
@@ -57,21 +72,27 @@ public class Parser {
             nodeText.append(')');
         }
 
-        System.out.println(nodeText);
+//        System.out.println(nodeText);
+        if (nodeName.equals("font")) {
+            elems.add(e);
+        }
 
         for (Element c : e.children()) {
-            parse(c, depth + 1);
+            parseEl(c);
         }
     }
 
     private void parseLog() {
         try {
             File input = new File(infile);
-            Document doc = Jsoup.parse(input, "UTF-8", "http://example.com/");
-
-            parse(doc, 0);
-        } catch (Exception e) {
+            Document doc = Jsoup.parse(input, "UTF-8");
+            parseEl(doc);
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+
+
+
 }
