@@ -13,7 +13,6 @@ public class Parser {
     private String infile;
     private List<Record> records;
     private MillCounter mc;
-
     private List<Element> elems = new ArrayList<>();
 
     public Parser(String infile) {
@@ -53,6 +52,7 @@ public class Parser {
 
     private void parseEl(Element e) {
         String nodeName = e.nodeName();
+
         if (nodeName.equals("br")
                 || nodeName.equals("b")
                 || nodeName.equals("i")
@@ -61,18 +61,6 @@ public class Parser {
             return;
         }
 
-        StringBuilder nodeText = new StringBuilder();
-        nodeText.append(nodeName);
-        if (e.hasText()
-                && !nodeName.equals("#document")
-                && !nodeName.equals("html")
-                && !nodeName.equals("body")) {
-            nodeText.append('(');
-            nodeText.append(e.text());
-            nodeText.append(')');
-        }
-
-//        System.out.println(nodeText);
         if (nodeName.equals("font")) {
             elems.add(e);
         }
